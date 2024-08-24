@@ -155,14 +155,6 @@ import trash from "@/assets/cart/trash.png"
 
 
 
-
-
-
-
-
-
-
-
   const ICONS = {
     logo,
     chart,

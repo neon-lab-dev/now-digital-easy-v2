@@ -76,6 +76,30 @@
 
 
 
+.animation-container{
+  height: 56px;
+  overflow: hidden;
+}
+.slider{
+  display: block;
+  box-sizing: border-box;
+  color: black;
+  animation: spin_words 6s linear infinite;
+}
+
+
+@keyframes spin_words{
+  0%{margin-top: -400px;}
+  5%{margin-top: -200px;}
+  30%{margin-top: -200px;}
+  35%{margin-top: 0px;}
+  65%{margin-top: 0px;}
+  70%{margin-top: 200px;}
+  100%{margin-top: 200px;}
+}
+
+
+
 .vertical-marquee {
   display: flex;
   flex-direction: column;
