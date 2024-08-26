@@ -4,30 +4,40 @@ import Image from 'next/image';
 import { IMAGES } from '@/assets';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import SelectPlan from '@/components/SelectPlan';
 
-
-interface Price {
-    period: string;
-    amount: number;
-}
-interface PlanFeatureProps {title: string;starter: string; advanced: string; premium: string;}
-interface PlanCardProps { name: string;price: string; isStarter?: boolean; onAddToCart: () => void; showDropdown: boolean;}
 interface Domain {
     name: string;
     status: string;
-    price?: {
-        registerPrice: number;
-    }[];
+    price?: { registerPrice: number }[];
 }
+interface Price { period: string; amount: number; }
+interface PlanFeatureProps { title: string; starter: string; advanced: string; premium: string; }
+interface PlanCardProps { name: string; price: string; isStarter?: boolean; onAddToCart: () => void; showDropdown: boolean; }
+
+
+
+const fetchDomainAvailability = async (domain: string) => {
+    const response = await axios.post(
+        "https://liveserver.nowdigitaleasy.com:5000/product/domain_availability?country_code=IN",
+        { domain }
+    );
+    return response.data.response.map((item: any) => ({
+        name: item.domain,
+        status: item.status === "available" ? "Available" : item.status === "unavailable" ? "Unavailable" : "Unknown",
+        price: item.price && item.price.length > 0 ? item.price : undefined,
+    }));
+};
+
+const fetchPlans = async () => {
+    const response = await axios.get('https://liveserver.nowdigitaleasy.com:5000/product//hosting?country_code=IN'); // Replace with your API endpoint
+    if (!response) {
+        throw new Error('Network response was not ok');
+    }
+    return response.data;
+};
 
 const RightPlan: React.FC = () => {
-    const fetchPlans = async () => {
-        const response = await axios.get('https://liveserver.nowdigitaleasy.com:5000/product//hosting?country_code=IN'); // Replace with your API endpoint
-        if (!response) {
-            throw new Error('Network response was not ok');
-        }
-        return response.data;
-    };
     const { data } = useQuery({ queryKey: ["plans"], queryFn: fetchPlans });
     const [activeDropdown, setActiveDropdown] = useState < string | null > (null);
     const [showInputForm, setShowInputForm] = useState < boolean > (false);
@@ -36,7 +46,10 @@ const RightPlan: React.FC = () => {
     const [selectedPeriod, setSelectedPeriod] = useState('monthly');
     const [price, setPrice] = useState < number > (0);
     const [searchQuery, setSearchQuery] = useState("");
-    const [domains, setDomains] = useState < Domain[] > ([]);
+
+
+
+
     // Update price based on selected period
     useEffect(() => {
         if (data && data.product && data.product.length > 0) {
@@ -62,25 +75,18 @@ const RightPlan: React.FC = () => {
         const selectedPrice = data.product[0].price.find((p: { period: any; }) => p.period === selected);
         setPrice(selectedPrice ? selectedPrice.amount : 0);
     };
-    const handleSearchClick = async () => {
-        try {
-            const response = await axios.post(
-                "https://liveserver.nowdigitaleasy.com:5000/product/domain_availability?country_code=IN",
-                { domain: searchQuery }
-            );
-            const fetchedDomains = response.data.response.map((item: any) => ({
-                name: item.domain,
-                status: item.status === "available" ? "Available" : item.status === "unavailable" ? "Unavailable" : "Unknown",
-                price: item.price && item.price.length > 0 ? item.price : undefined
-            }));
 
-            setDomains(fetchedDomains);
+    const { data: domains = [], refetch, isFetching } = useQuery<Domain[]>({
+        queryKey: ["domainAvailability", searchQuery],
+        queryFn: () => fetchDomainAvailability(searchQuery),
+        enabled: false,
+    });
+
+    const handleSearchClick = () => {
+        refetch().then(() => {
             setIsModalOpen(true);
-        } catch (error) {
-            console.error("Error fetching domain data:", error);
-        }
+        });
     };
-
 
     const DomainItem = ({ domain }: { domain: Domain }) => (
         <div className="flex justify-between bg-white items-center content-center  m-3">
@@ -147,39 +153,18 @@ const RightPlan: React.FC = () => {
                 />
                 <div className="p-4 relative">
                     {currentStep === 0 && (
-                        <div className="flex justify-between items-center py-10 mx-4 md:mx-10">
-                            <div className='flex flex-col gap-1'>
-                                <span className='font-roboto font-900 text-4xl text-home-heading'>Plan Name</span>
-                                <span className='text-3xl font-400 font-roboto-serif'>{data.product[0].name}</span>
-                            </div>
-                            <div className='flex items-center justify-center gap-10'>
-                                <div className='flex flex-col gap-3'>
-                                    <span className='text-4xl font-roboto font-900 text-home-heading'>Duration</span>
-                                    <select
-                                        name="duration"
-                                        id="duration"
-                                        className='p-3 rounded-lg'
-                                        value={selectedPeriod}
-                                        onChange={handleDurationChange}
-                                    >
-                                        {data.product[0].price.map((p:Price) => (
-                                            <option key={p.period} value={p.period}>
-                                                {p.period.charAt(0).toUpperCase() + p.period.slice(1)}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className='flex flex-col gap-1'>
-                                    <span className='font-roboto font-900 text-4xl text-home-heading'>Total</span>
-                                    <span className='text-4xl font-400 font-roboto-serif'>{price}/-</span>
-                                </div>
-                                <button
-                                    className='bg-home-primary text-3xl font-900 text-white py-4 px-4 rounded-2xl'
-                                    onClick={handleNextStep}
-                                >
-                                    Buy Now
-                                </button>
-                            </div>
+                        <div>
+                            {activeDropdown === "Starter" && <div >
+                                <SelectPlan handleNextStep={handleNextStep}  index={0} />                            
+                            </div>}
+                            {activeDropdown === "Advanced" && <div >
+                                <SelectPlan handleNextStep={handleNextStep}  index={1} />                            
+
+                            </div>}
+                            {activeDropdown === "Premium" && <div >
+                                <SelectPlan handleNextStep={handleNextStep}  index={2} />                            
+
+                            </div>}
                         </div>
                     )}
                     {currentStep === 1 && (
@@ -220,19 +205,20 @@ const RightPlan: React.FC = () => {
                                                 autoFocus
                                             />
                                             <button
-                                                className="bg-domain-primary text-xl max-md:text-sm text-white px-8 max-md:px-2 rounded-r-xl"
+                                                className={`bg-home-primary text-white  text-xl font-roboto font-700 px-6 p-2  rounded-r-xl ${isFetching ? "cursor-wait" : ""
+                                                    }`}
                                                 onClick={handleSearchClick}
-
+                                                disabled={isFetching} // Disable button while loading
                                             >
-                                                <span className="font-roboto font-700">Check Availability</span>
+                                                {isFetching ? "Searching..." : "Check Availability "}
                                             </button>
                                         </div>
                                         <div className="p-2 h-[300px] overflow-y-scroll hide-scrollbar">
-                                                <div>
-                                                    {domains.map((domain, index) => (
-                                                        <DomainItem key={index} domain={domain} />
-                                                    ))}
-                                                </div>
+                                            <div>
+                                                {domains.map((domain, index) => (
+                                                    <DomainItem key={index} domain={domain} />
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (
@@ -307,9 +293,9 @@ const RightPlan: React.FC = () => {
                                 <th className="sticky left-0 bg-white shadow-r-xl text-home-heading text-xl lg:text-5xl font-roboto font-900 tracking-tighter text-center py-4 lg:py-8">
                                     Plan Features
                                 </th>
-                                <PlanCard name="Starter"price="67"isStarter={true}onAddToCart={() => handleAddToCart("Starter")}showDropdown={activeDropdown === "Starter"}/>
-                                <PlanCard name="Advanced"price="99"onAddToCart={() => handleAddToCart("Advanced")}showDropdown={activeDropdown === "Advanced"}/>
-                                <PlanCard name="Premium"price="149"onAddToCart={() => handleAddToCart("Premium")} showDropdown={activeDropdown === "Premium"}/>
+                                <PlanCard name="Starter" price="67" isStarter={true} onAddToCart={() => handleAddToCart("Starter")} showDropdown={activeDropdown === "Starter"} />
+                                <PlanCard name="Advanced" price="99" onAddToCart={() => handleAddToCart("Advanced")} showDropdown={activeDropdown === "Advanced"} />
+                                <PlanCard name="Premium" price="149" onAddToCart={() => handleAddToCart("Premium")} showDropdown={activeDropdown === "Premium"} />
                             </tr>
                         </thead>
                         <tbody>
