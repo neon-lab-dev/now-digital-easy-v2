@@ -1,23 +1,34 @@
-"use client";
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/store/store';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ICONS } from '@/assets';
 import Cart from './Cart';
-import { useState } from 'react';
 import ProductDropDown from './ProductDropDown';
 import Login from './Login';
 import SignUpUser from './SignUp';
+import { logout } from '@/store/authSlice';
+import ClientProviders from '@/providers/ClientProvider';
 
 interface NavbarProps {
     navbarBg: string;
 }
 
+// const getLocalStorage:  any = () =>{
+//     const name = localStorage.getItem("data") || "";
+//     const userDetails = JSON.parse(name)
+//     console.log(userDetails)
+// }
+
+
 const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
     const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
-    const [isSignUpOpen, setIsSignUpOpen] = useState(false);
-    const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [activeModal, setActiveModal] = useState<'login' | 'signup' | null>(null);
+
+    const dispatch = useDispatch();
+    const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
     const toggleProductDropdown = () => {
         setIsProductDropdownOpen(!isProductDropdownOpen);
@@ -39,6 +50,14 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
     const handleSignUp = () => {
         setActiveModal('signup');
     };
+
+    const handleLogout = () => {
+        dispatch(logout());
+        localStorage.removeItem('data')
+    };
+
+    // getLocalStorage()
+
 
     return (
         <div className={`z-50 fixed w-full top-0 left-0 right-0 transition-colors duration-500 ${navbarBg}`}>
@@ -69,18 +88,32 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
                         </div>
                         <div className="flex justify-end gap-10 ml-auto">
                             <div className="hidden md:flex gap-4 sm:hidden">
-                                <button 
-                                    className="bg-white border-[2px] max-lg:hidden border-[#0055FF] text-[#0055FF] px-4 py-2 rounded-[4px] text-[15px] font-bold"
-                                    onClick={handleLogin}
-                                >
-                                    Log in
-                                </button>
-                                <button 
-                                    className="bg-[#0055FF] text-white max-lg:hidden px-4 py-2 rounded-[4px] text-[15px] font-bold"
-                                    onClick={handleSignUp}
-                                >
-                                    Sign Up
-                                </button>
+                                {isAuthenticated ? (
+                                    <>
+                                        <span className="text-[#0055FF] text-[15px] font-bold">{user?.name}</span>
+                                        <button 
+                                            className="bg-white border-[2px] border-[#0055FF] text-[#0055FF] px-4 py-2 rounded-[4px] text-[15px] font-bold"
+                                            onClick={handleLogout}
+                                        >
+                                            Log out
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button 
+                                            className="bg-white border-[2px] max-lg:hidden border-[#0055FF] text-[#0055FF] px-4 py-2 rounded-[4px] text-[15px] font-bold"
+                                            onClick={handleLogin}
+                                        >
+                                            Log in
+                                        </button>
+                                        <button 
+                                            className="bg-[#0055FF] text-white max-lg:hidden px-4 py-2 rounded-[4px] text-[15px] font-bold"
+                                            onClick={handleSignUp}
+                                        >
+                                            Sign Up
+                                        </button>
+                                    </>
+                                )}
                             </div>
                             <div className="flex gap-4 max-sm:gap-2 items-center">
                                 <Image src={ICONS.chart} alt="Chart Icon" className="block w-[25px] cursor-pointer" onClick={toggleCart} />
@@ -103,6 +136,7 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
                 <SignUpUser onClose={() => setActiveModal(null)} isOpen={activeModal === 'signup'} />
             )}
         </div>
+
     );
 };
 

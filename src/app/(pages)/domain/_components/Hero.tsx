@@ -209,7 +209,7 @@ const Hero = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
            <button
-                className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 p-2  rounded-r-xl ${
+                className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 max-lg:px-2 max-md:text-sm p-2  rounded-r-xl ${
                   isFetching ? "cursor-wait" : ""
                 }`}
                 onClick={handleSearchClick}
@@ -239,13 +239,13 @@ const Hero = () => {
             <div className="flex justify-center w-full pb-6 max-md:pb-0">
               <div className="flex m-3 rounded-xl">
                 <input
-                  className="w-[1100px] max-2xl:w-[900px] max-xl:w-[700px] max-lg:w-[500px] max-md:w-[70vw] p-5 max-lg:p-3 max-md:p-2 border rounded-l-xl max-md:placeholder:text-[10px]"
+                  className="w-[80vw] max-md:w-[70vw] p-5 max-lg:p-3 max-md:p-2 border rounded-l-xl max-md:placeholder:text-[10px]"
                   placeholder="Find and purchase a domain name"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                  <button
-                className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 p-2  rounded-r-xl ${
+                className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 max-lg:px-2 max-md:text-sm p-2  rounded-r-xl ${
                   isFetching ? "cursor-wait" : ""
                 }`}
                 onClick={handleSearchClick}

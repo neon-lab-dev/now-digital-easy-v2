@@ -3,6 +3,11 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useTransition, animated } from 'react-spring';
+import { useAppDispatch } from '../store/store';
+import { loginSuccess, loginFailure } from '../store/authSlice';
+import Router from 'next/router';
+import router from 'next/router';
+import { json } from 'stream/consumers';
 
 // Define the mutation function
 const loginUser = async (data: { email: string; password: string }) => {
@@ -31,13 +36,19 @@ interface LoginFormInputs {
 
 const Login: React.FC<LoginProps> = ({ onClose, isOpen }) => {
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
+    const dispatch = useAppDispatch();
+
     const mutation = useMutation({
         mutationFn: loginUser,
-        onSuccess: () => {
+        onSuccess: (data) => {
+            dispatch(loginSuccess(data.token));
+            localStorage.setItem('data',JSON.stringify(data))
             toast.success('Login successful');
-            // Handle successful login here (e.g., save token, redirect)
+            // Handle successful login here (e.g., redirect)
+            onClose(); // Optionally close the login modal
         },
         onError: (error: Error) => {
+            dispatch(loginFailure(error.message));
             toast.error(error.message || 'Login failed');
         },
     });
