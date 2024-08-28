@@ -1,11 +1,14 @@
 import Image, { StaticImageData } from 'next/image';
 import { CART } from '@/assets';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface CartItem {
     name: string;
     link: string;
-    price?: { registerPrice: string }[]; // Adjust this based on your actual data structure
+    price?: { registerPrice: string }[]; 
+    // Adjust this based on your actual data structure
+    domainName:string
 }
 
 interface Product {
@@ -20,18 +23,28 @@ const SummaryPage = () => {
 
     useEffect(() => {
         // Fetch cart items from local storage
-        const savedCart = localStorage.getItem('cart');
-        const cartItems: CartItem[] = savedCart ? JSON.parse(savedCart) : [];
-        
-        // Transform cart items to match your products structure
-        const formattedProducts: Product[] = cartItems.map((item: CartItem) => ({
-            name: item.name,
-            link: item.link, // Assuming 'link' is part of your domain item
-            img: CART.google, // Replace with appropriate image mapping if needed
+        const savedCart = window.localStorage.getItem('cart');
+        const token=window.localStorage.getItem('token');
+        // GET call to fetch data
+        const fetchData=async()=>{
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+                }
+            const response=await axios.get("https://liveserver.nowdigitaleasy.com:5000/cart",{headers});
+              // Transform cart items to match your products structure
+        const formattedProducts: Product[] =response.data.products.map((item: CartItem) => ({
+            name: item.domainName,
+            link: item?.link, // Assuming 'link' is part of your domain item
+            img: CART?.google, // Replace with appropriate image mapping if needed
             price: item.price ? `₹${item.price[0].registerPrice}` : "N/A",
         }));
         
         setProducts(formattedProducts);
+        }
+        fetchData();
+        
+        
     }, []);
 
     return (

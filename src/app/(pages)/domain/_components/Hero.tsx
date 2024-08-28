@@ -18,7 +18,6 @@ interface Domain {
     _id: string;
   }[];
 }
-
 const words = [".education", ".travel", ".fun", ".online"];
 
 const fetchDomainAvailability = async (domain: string) => {
@@ -28,7 +27,12 @@ const fetchDomainAvailability = async (domain: string) => {
   );
   return response.data.response.map((item: any) => ({
     name: item.domain,
-    status: item.status === "available" ? "Available" : item.status === "unavailable" ? "Unavailable" : "Unknown",
+    status:
+      item.status === "available"
+        ? "Available"
+        : item.status === "unavailable"
+        ? "Unavailable"
+        : "Unknown",
     price: item.price && item.price.length > 0 ? item.price : undefined,
   }));
 };
@@ -36,16 +40,15 @@ const fetchDomainAvailability = async (domain: string) => {
 const Hero = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [cart, setCart] = useState < Domain[] > (() => {
-    // Load the cart from local storage if it exists
+  const [cart, setCart] = useState< Domain[] >(() => {
     const savedCart = localStorage.getItem("cart");
     return savedCart ? JSON.parse(savedCart) : [];
   });
-  const [searchQuery, setSearchQuery] = useState("");
+
   const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState("");
 
-
-  const { data: domains = [], refetch, isFetching } = useQuery < Domain[] > ({
+  const { data: domains = [], refetch, isFetching } = useQuery<Domain[]>({
     queryKey: ["domainAvailability", searchQuery],
     queryFn: () => fetchDomainAvailability(searchQuery),
     enabled: false,
@@ -61,7 +64,9 @@ const Hero = () => {
 
   useEffect(() => {
     // Save the cart to local storage whenever it changes
+
     localStorage.setItem("cart", JSON.stringify(cart));
+    console.log("Cart updated and saved to localStorage:", cart);
   }, [cart]);
 
   const handleSearchClick = () => {
@@ -72,9 +77,39 @@ const Hero = () => {
 
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const handleAddToCart = (domain: Domain) => {
-    setCart([...cart, domain]);
-    queryClient.setQueryData < Domain[] > (
+  const handleAddToCart = async (domain: Domain) => {
+    const cartData = localStorage.getItem("cart");
+    
+    if (cartData && cartData.length > 0) {
+      const token = localStorage.getItem("token");
+      console.log("inside");
+      
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      const data = [
+        {
+          product: "domain",
+          productId: "65703f67747116cd40fdea3a",
+          domainName: "kjkjkjkjkla.in",
+          type: "new",
+          qty: 170,
+          year: 6,
+          EppCode: "",
+        },
+      ];
+
+      const response = await axios.post(
+        "https://liveserver.nowdigitaleasy.com:5000/cart",
+        { data },
+        { headers }
+      );
+      console.log("API response:", response.data);
+    } 
+    setCart((prevCart) => [...prevCart, domain]);
+    queryClient.setQueryData<Domain[]>(
       ["domainAvailability", searchQuery],
       (oldDomains = []) =>
         oldDomains.map((d) =>
@@ -84,8 +119,8 @@ const Hero = () => {
   };
 
   const handleRemoveFromCart = (domain: Domain) => {
-    setCart(cart.filter((item) => item.name !== domain.name));
-    queryClient.setQueryData < Domain[] > (
+    setCart((prevCart) => prevCart.filter((item) => item.name !== domain.name));
+    queryClient.setQueryData<Domain[]>(
       ["domainAvailability", searchQuery],
       (oldDomains = []) =>
         oldDomains.map((d) =>
@@ -108,8 +143,7 @@ const Hero = () => {
         return "black"; // fallback color
     }
   };
-
-  const isInCart = (domain: Domain) =>
+const isInCart = (domain: Domain) =>
     cart.some((item) => item.name === domain.name);
 
   const DomainItem = ({ domain }: { domain: Domain }) => (
