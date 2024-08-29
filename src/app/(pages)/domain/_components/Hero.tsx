@@ -64,7 +64,6 @@ const Hero = () => {
 
   useEffect(() => {
     // Save the cart to local storage whenever it changes
-
     localStorage.setItem("cart", JSON.stringify(cart));
     console.log("Cart updated and saved to localStorage:", cart);
   }, [cart]);
@@ -78,36 +77,46 @@ const Hero = () => {
   const handleCloseModal = () => setIsModalOpen(false);
 
   const handleAddToCart = async (domain: Domain) => {
-    const cartData = localStorage.getItem("cart");
-    
-    if (cartData && cartData.length > 0) {
-      const token = localStorage.getItem("token");
-      console.log("inside");
-      
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      };
+    if (typeof window === 'undefined') return; 
 
-      const data = [
-        {
-          product: "domain",
-          productId: "65703f67747116cd40fdea3a",
-          domainName: "kjkjkjkjkla.in",
-          type: "new",
-          qty: 170,
-          year: 6,
-          EppCode: "",
-        },
-      ];
+    const token = window.localStorage.getItem('token');
+    const newCartItem = {
+      product: "domain",
+      productId: "65703f67747116cd40fdea3a",
+      domainName: domain.name,
+      type: "new",
+      price: domain?.price[0]?.registerPrice,
+      qty: 170,
+      year: 6,
+      EppCode: "",
+    };
+  
+    if (token) {
+      try {
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        };
 
-      const response = await axios.post(
-        "https://liveserver.nowdigitaleasy.com:5000/cart",
-        { data },
-        { headers }
-      );
-      console.log("API response:", response.data);
-    } 
+        const { data: existingCart } = await axios.get("https://liveserver.nowdigitaleasy.com:5000/cart", { headers });
+        const updatedCartItems = [...existingCart.products, newCartItem];
+        const response = await axios.post(
+          "https://liveserver.nowdigitaleasy.com:5000/cart",
+          { data: updatedCartItems },
+          { headers }
+        );
+        console.log("API response:", response.data);
+      } catch (error) {
+        console.error("Failed to add to cart:", error);
+        return;
+      }
+    } else {
+      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+      cart.push(newCartItem);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      console.log("Cart updated and saved to localStorage:", cart);
+    }
+  
     setCart((prevCart) => [...prevCart, domain]);
     queryClient.setQueryData<Domain[]>(
       ["domainAvailability", searchQuery],

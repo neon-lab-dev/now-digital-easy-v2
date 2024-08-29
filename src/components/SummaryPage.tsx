@@ -20,38 +20,64 @@ interface Product {
 
 const SummaryPage = () => {
     const [products, setProducts] = useState<Product[]>([]);
-
+    const [isLoading,setIsLoading]=useState(false);
     useEffect(() => {
-        // Fetch cart items from local storage
-        const savedCart = window.localStorage.getItem('cart');
-        const token=window.localStorage.getItem('token');
-        // GET call to fetch data
-        const fetchData=async()=>{
-            const headers = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+        if (typeof window === 'undefined') return;
+        const token = window.localStorage.getItem('token');
+    
+        const fetchCartItems = async () => {
+            let products: Product[] = [];
+            if (token) {
+                setIsLoading(true);
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                };
+                try {
+                    const { data } = await axios.get("https://liveserver.nowdigitaleasy.com:5000/cart", { headers });
+                    products = data.products.map((item: CartItem) => ({
+                        name: item.domainName,
+                        link: item?.link,
+                        img: CART?.google,
+                        price: item?.domainprice ? `₹${item?.domainprice}` : "N/A",
+                    }));
+                } catch (error) {
+                    console.error("Error fetching cart data:", error);
+                    // Handle error (clear token, logout user, etc.)
                 }
-            const response=await axios.get("https://liveserver.nowdigitaleasy.com:5000/cart",{headers});
-              // Transform cart items to match your products structure
-        const formattedProducts: Product[] =response.data.products.map((item: CartItem) => ({
-            name: item.domainName,
-            link: item?.link, // Assuming 'link' is part of your domain item
-            img: CART?.google, // Replace with appropriate image mapping if needed
-            price: item.price ? `₹${item.price[0].registerPrice}` : "N/A",
-        }));
-        
-        setProducts(formattedProducts);
-        }
-        fetchData();
-        
-        
+                setIsLoading(false);
+            } else {
+                const cartItem = window.localStorage.getItem('cart');
+                if (cartItem) {
+                    setIsLoading(true);
+                    try {
+                        const cart: CartItem[] = JSON.parse(cartItem);
+                        products = cart.map((item) => ({
+                            name: item.domainName,
+                            link: item?.link,
+                            img: CART?.google,
+                            price: item.price ? `₹${item.price[0].registerPrice}` : "N/A",
+                        }));
+                    } catch (error) {
+                        console.error("Error parsing cart data:", error);
+                        window.localStorage.removeItem('cart');
+                    }
+                    setIsLoading(false);
+                }
+            }
+            setProducts(products);
+        };
+    
+        fetchCartItems();
     }, []);
+    
 
     return (
         <div className="overflow-x-auto">
             {products.length === 0 ? (
                 <div className="flex justify-center items-center h-64 text-center">
                     <p className="text-lg font-semibold text-gray-500">Your cart is empty.</p>
+                    {isLoading && <p className="text-lg font-semibold text-gray-500">Loading....</p>}
                 </div>
             ) : (
                 <table className="min-w-full divide-y divide-gray-200">
