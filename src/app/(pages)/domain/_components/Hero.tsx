@@ -85,7 +85,7 @@ const Hero = () => {
       productId: "65703f67747116cd40fdea3a",
       domainName: domain.name,
       type: "new",
-      price: domain?.price[0]?.registerPrice,
+      price: domain.price?.[0]?.registerPrice ?? 0, 
       qty: 170,
       year: 6,
       EppCode: "",

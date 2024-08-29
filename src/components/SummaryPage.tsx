@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 interface CartItem {
+    [x: string]: any;
     name: string;
     link: string;
     price?: { registerPrice: string }[]; 
