@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
 import Link from 'next/link';
@@ -9,18 +10,10 @@ import ProductDropDown from './ProductDropDown';
 import Login from './Login';
 import SignUpUser from './SignUp';
 import { logout } from '@/store/authSlice';
-import ClientProviders from '@/providers/ClientProvider';
 
 interface NavbarProps {
     navbarBg: string;
 }
-
-// const getLocalStorage:  any = () =>{
-//     const name = localStorage.getItem("data") || "";
-//     const userDetails = JSON.parse(name)
-//     console.log(userDetails)
-// }
-
 
 const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
     const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
@@ -28,17 +21,27 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
     const [activeModal, setActiveModal] = useState<'login' | 'signup' | null>(null);
 
     const dispatch = useDispatch();
-    const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+    const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+    const [fullName, setFullName] = useState<string>("User");
+
+    useEffect(() => {
+        const storedName = localStorage.getItem("userData") || "User";
+        setFullName(storedName);
+    }, []);
 
     const toggleProductDropdown = () => {
         setIsProductDropdownOpen(!isProductDropdownOpen);
     };
+
     const toggleCart = () => {
         setIsCartOpen(!isCartOpen);
     };
+
     const toggleSignUp = () => {
         setActiveModal(activeModal === 'signup' ? null : 'signup');
     };
+
     const toggleLogin = () => {
         setActiveModal(activeModal === 'login' ? null : 'login');
     };
@@ -53,11 +56,10 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
 
     const handleLogout = () => {
         dispatch(logout());
-        localStorage.removeItem('data')
+        localStorage.removeItem('token');
+        localStorage.removeItem('userData');
+        window.location.reload(); // Optionally refresh the page
     };
-
-    // getLocalStorage()
-
 
     return (
         <div className={`z-50 fixed w-full top-0 left-0 right-0 transition-colors duration-500 ${navbarBg}`}>
@@ -89,24 +91,26 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
                         <div className="flex justify-end gap-10 ml-auto">
                             <div className="hidden md:flex gap-4 sm:hidden">
                                 {isAuthenticated ? (
-                                    <>
-                                        <span className="text-[#0055FF] text-[15px] font-bold">{user?.name}</span>
-                                        <button 
+                                    <div className='flex justify-center items-center gap-4'>
+                                        <span className="bg-[#0055FF] text-white rounded-full text-[15px] text-xl px-4 py-2">
+                                            {fullName.charAt(0)} {/* Display the full name */}
+                                        </span>
+                                        <button
                                             className="bg-white border-[2px] border-[#0055FF] text-[#0055FF] px-4 py-2 rounded-[4px] text-[15px] font-bold"
                                             onClick={handleLogout}
                                         >
                                             Log out
                                         </button>
-                                    </>
+                                    </div>
                                 ) : (
                                     <>
-                                        <button 
+                                        <button
                                             className="bg-white border-[2px] max-lg:hidden border-[#0055FF] text-[#0055FF] px-4 py-2 rounded-[4px] text-[15px] font-bold"
                                             onClick={handleLogin}
                                         >
                                             Log in
                                         </button>
-                                        <button 
+                                        <button
                                             className="bg-[#0055FF] text-white max-lg:hidden px-4 py-2 rounded-[4px] text-[15px] font-bold"
                                             onClick={handleSignUp}
                                         >
@@ -115,10 +119,13 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
                                     </>
                                 )}
                             </div>
+
                             <div className="flex gap-4 max-sm:gap-2 items-center">
                                 <Image src={ICONS.chart} alt="Chart Icon" className="block w-[25px] cursor-pointer" onClick={toggleCart} />
                                 {isCartOpen && (
-                                    <Cart onClick={toggleCart}/>
+                                    <div className='z-50'>
+                                        <Cart onClick={toggleCart} />
+                                    </div>
                                 )}
                                 <Image src={ICONS.menu} alt="menu" className="w-[25px] lg:hidden" />
                             </div>
@@ -127,7 +134,7 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
                 </div>
             </nav>
             {isProductDropdownOpen && (
-                <ProductDropDown/>
+                <ProductDropDown />
             )}
             {activeModal === 'login' && (
                 <Login onClose={() => setActiveModal(null)} isOpen={activeModal === 'login'} />
@@ -136,7 +143,6 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
                 <SignUpUser onClose={() => setActiveModal(null)} isOpen={activeModal === 'signup'} />
             )}
         </div>
-
     );
 };
 

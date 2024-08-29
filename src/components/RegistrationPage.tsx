@@ -1,10 +1,11 @@
 const RegistrationPage = () => (
-    <div className="flex flex-col justify-center pl-4 md:pl-0 lg:pl-0 pr-4 md:pr-0 lg:pr-0">
+    <div className="flex flex-col justify-center pl-4 md:pl-0 lg:pl-0 pr-4 md:pr-0 lg:pr-0 min-h-screen overflow-y-auto">
+         <div className="flex-1 ">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
             <h2 className="mt-2 text-left text-base font-bold leading-9 tracking-tight text-gray-900">New User?</h2>
             <p className='text-sm'>Create an account in 10 seconds</p>
         </div>
-        <div className="sm:mx-auto sm:w-full sm:max-w-sm  overflow-y-auto">
+        <div className="sm:mx-auto sm:w-full sm:max-w-sm  ">
             <form action="#" className="mt-4 grid grid-cols-6 gap-6">
                 <div className="col-span-3">
                     <label className="text-sm block">First Name</label>
@@ -70,9 +71,7 @@ const RegistrationPage = () => (
                 Create Account
             </button>
         </div>
-        <div className='text-center text-sm text-gray-500'>
-            Already have an account?
-            <a href="#" className="font-bold leading-6 text-blue-600">Sign in</a>
+        
         </div>
     </div>
 );
