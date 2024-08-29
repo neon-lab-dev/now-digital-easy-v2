@@ -14,6 +14,20 @@ const initialState: AuthState = {
     user: null,
 };
 
+// Check localStorage for authentication data
+
+const storedData = window.localStorage.getItem('data');
+if (storedData) {
+    try {
+        const parsedData = JSON.parse(storedData);
+        initialState.isAuthenticated = true;
+        initialState.token = parsedData.token;
+        initialState.user = parsedData.data;
+    } catch (error) {
+        console.error("Failed to parse stored authentication data:", error);
+    }
+}
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,

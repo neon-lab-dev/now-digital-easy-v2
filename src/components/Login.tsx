@@ -1,5 +1,6 @@
+"use client"
 import { useMutation } from '@tanstack/react-query';
-import React from 'react';
+import React, { useEffect ,useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useTransition, animated } from 'react-spring';
@@ -37,6 +38,15 @@ interface LoginFormInputs {
 const Login: React.FC<LoginProps> = ({ onClose, isOpen }) => {
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
     const dispatch = useAppDispatch();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const token = window.localStorage.getItem('token');
+        if (token) {
+            setIsLoggedIn(true);
+        }
+    }, []);
 
     const mutation = useMutation({
         mutationFn: loginUser,
