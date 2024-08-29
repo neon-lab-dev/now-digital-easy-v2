@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useTransition, animated } from 'react-spring';
@@ -8,6 +8,7 @@ import { loginSuccess, loginFailure } from '../store/authSlice';
 import Router from 'next/router';
 import router from 'next/router';
 import { json } from 'stream/consumers';
+import { useEffect } from 'react';
 
 // Define the mutation function
 const loginUser = async (data: { email: string; password: string }) => {
