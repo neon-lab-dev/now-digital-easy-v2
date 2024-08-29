@@ -36,7 +36,8 @@ const Login: React.FC<LoginProps> = ({ onClose, isOpen }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        if (typeof window === 'undefined') return;
+        const token = window.localStorage.getItem('token');
         if (token) {
             setIsLoggedIn(true);
         }

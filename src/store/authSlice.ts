@@ -16,7 +16,8 @@ const initialState: AuthState = {
 };
 
 // Check localStorage for authentication data
-const storedData = localStorage.getItem('data');
+
+const storedData = window.localStorage.getItem('data');
 if (storedData) {
     try {
         const parsedData = JSON.parse(storedData);

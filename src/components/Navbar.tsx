@@ -26,7 +26,8 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
     const [fullName, setFullName] = useState<string>("User");
 
     useEffect(() => {
-        const storedName = localStorage.getItem("userData") || "User";
+        if (typeof window === 'undefined') return;
+        const storedName = window.localStorage.getItem("userData") || "User";
         setFullName(storedName);
     }, []);
 

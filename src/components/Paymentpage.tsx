@@ -35,7 +35,6 @@ const PaymentPage = () => {
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
-
         const token = window.localStorage.getItem('token');
         const fetchCartItems = async () => {
             let products: Product[] = [];

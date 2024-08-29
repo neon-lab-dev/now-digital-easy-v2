@@ -63,6 +63,7 @@ const Hero = () => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     // Save the cart to local storage whenever it changes
     localStorage.setItem("cart", JSON.stringify(cart));
     console.log("Cart updated and saved to localStorage:", cart);
