@@ -7,7 +7,6 @@ interface AuthState {
     user: { name: string } | null;
 }
 
-// Define the initial state
 const initialState: AuthState = {
     isAuthenticated: false,
     token: null,
@@ -38,24 +37,18 @@ const authSlice = createSlice({
             state.token = action.payload.token;
             state.user = action.payload.user;
             state.error = null;
-            // Save user data to localStorage
-            localStorage.setItem('data', JSON.stringify(action.payload));
         },
         loginFailure: (state, action: PayloadAction<string>) => {
             state.isAuthenticated = false;
             state.token = null;
             state.user = null;
             state.error = action.payload;
-            // Optionally clear user data from localStorage
-            localStorage.removeItem('data');
         },
         logout: (state) => {
             state.isAuthenticated = false;
             state.token = null;
             state.user = null;
             state.error = null;
-            // Remove user data from localStorage
-            localStorage.removeItem('data');
         },
     },
 });
