@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TextTransition, { presets } from "react-text-transition";
 import axios from "axios";
+import Cart from "@/components/Cart";
 
 interface Domain {
   name: string;
@@ -17,7 +18,6 @@ interface Domain {
     _id: string;
   }[];
 }
-
 const words = [".education", ".travel", ".fun", ".online"];
 
 const fetchDomainAvailability = async (domain: string) => {
@@ -27,7 +27,12 @@ const fetchDomainAvailability = async (domain: string) => {
   );
   return response.data.response.map((item: any) => ({
     name: item.domain,
-    status: item.status === "available" ? "Available" : item.status === "unavailable" ? "Unavailable" : "Unknown",
+    status:
+      item.status === "available"
+        ? "Available"
+        : item.status === "unavailable"
+        ? "Unavailable"
+        : "Unknown",
     price: item.price && item.price.length > 0 ? item.price : undefined,
   }));
 };
@@ -35,11 +40,15 @@ const fetchDomainAvailability = async (domain: string) => {
 const Hero = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [cart, setCart] = useState<Domain[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const queryClient = useQueryClient();
+  const [cart, setCart] = useState< Domain[] >(() => {
+    const savedCart = localStorage.getItem("cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
 
-  const { data: domains = [], refetch ,isFetching } = useQuery<Domain[]>({
+  const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: domains = [], refetch, isFetching } = useQuery<Domain[]>({
     queryKey: ["domainAvailability", searchQuery],
     queryFn: () => fetchDomainAvailability(searchQuery),
     enabled: false,
@@ -53,6 +62,12 @@ const Hero = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    // Save the cart to local storage whenever it changes
+    localStorage.setItem("cart", JSON.stringify(cart));
+    console.log("Cart updated and saved to localStorage:", cart);
+  }, [cart]);
+
   const handleSearchClick = () => {
     refetch().then(() => {
       setIsModalOpen(true);
@@ -61,8 +76,48 @@ const Hero = () => {
 
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const handleAddToCart = (domain: Domain) => {
-    setCart([...cart, domain]);
+  const handleAddToCart = async (domain: Domain) => {
+    if (typeof window === 'undefined') return; 
+
+    const token = window.localStorage.getItem('token');
+    const newCartItem = {
+      product: "domain",
+      productId: "65703f67747116cd40fdea3a",
+      domainName: domain.name,
+      type: "new",
+      price: domain?.price[0]?.registerPrice,
+      qty: 170,
+      year: 6,
+      EppCode: "",
+    };
+  
+    if (token) {
+      try {
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        };
+
+        const { data: existingCart } = await axios.get("https://liveserver.nowdigitaleasy.com:5000/cart", { headers });
+        const updatedCartItems = [...existingCart.products, newCartItem];
+        const response = await axios.post(
+          "https://liveserver.nowdigitaleasy.com:5000/cart",
+          { data: updatedCartItems },
+          { headers }
+        );
+        console.log("API response:", response.data);
+      } catch (error) {
+        console.error("Failed to add to cart:", error);
+        return;
+      }
+    } else {
+      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+      cart.push(newCartItem);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      console.log("Cart updated and saved to localStorage:", cart);
+    }
+  
+    setCart((prevCart) => [...prevCart, domain]);
     queryClient.setQueryData<Domain[]>(
       ["domainAvailability", searchQuery],
       (oldDomains = []) =>
@@ -73,7 +128,7 @@ const Hero = () => {
   };
 
   const handleRemoveFromCart = (domain: Domain) => {
-    setCart(cart.filter((item) => item.name !== domain.name));
+    setCart((prevCart) => prevCart.filter((item) => item.name !== domain.name));
     queryClient.setQueryData<Domain[]>(
       ["domainAvailability", searchQuery],
       (oldDomains = []) =>
@@ -97,31 +152,35 @@ const Hero = () => {
         return "black"; // fallback color
     }
   };
-
-  const isInCart = (domain: Domain) => cart.some((item) => item.name === domain.name);
+const isInCart = (domain: Domain) =>
+    cart.some((item) => item.name === domain.name);
 
   const DomainItem = ({ domain }: { domain: Domain }) => (
     <div className="flex justify-between bg-white items-center content-center m-3">
       <div className="flex flex-col mx-4 max-md:mx-1 p-3 max-md:p-1">
-        <span className="font-900 text-lg max-lg:text-md max-md:text-xs">{domain.name}</span>
+        <span className="font-900 text-lg max-lg:text-md max-md:text-xs">
+          {domain.name}
+        </span>
         <div>
           <span
-            className={`text-[14px] w-[30px] max-md:text-xs ${
-              domain.status === "Available"
+            className={`text-[14px] w-[30px] max-md:text-xs ${domain.status === "Available"
                 ? "text-green-500"
                 : domain.status === "Added"
-                ? "text-yellow-600"
-                : domain.status === "Unavailable"
-                ? "text-red-500"
-                : "text-gray-500"
-            }`}
+                  ? "text-yellow-600"
+                  : domain.status === "Unavailable"
+                    ? "text-red-500"
+                    : "text-gray-500"
+              }`}
           >
             {domain.status}
           </span>
         </div>
       </div>
       <div className="flex content-center items-center gap-8">
-        <select className="border rounded-md p-1 max-md:hidden" disabled={domain.status !== "Available"}>
+        <select
+          className="border rounded-md p-1 max-md:hidden"
+          disabled={domain.status !== "Available"}
+        >
           {[1, 2, 3, 5].map((year) => (
             <option key={year} value={year}>
               {year} year{year > 1 ? "s" : ""}
@@ -130,7 +189,9 @@ const Hero = () => {
         </select>
         <div className="w-[150px] max-md:w-[40px]">
           <span className="font-900 w-[200px] text-center text-2xl max-lg:text-sm leading-tight">
-            {domain.price && domain.price.length > 0 ? `₹${domain.price[0].registerPrice}` : "N/A"}
+            {domain.price && domain.price.length > 0
+              ? `₹${domain.price[0].registerPrice}`
+              : "N/A"}
           </span>
           <div className="">
             <span className="text-[14px] text-center max-md:hidden max-lg:text-xs ">
@@ -141,15 +202,14 @@ const Hero = () => {
           </div>
         </div>
         <button
-          className={`text-white w-[120px] max-md:w-[80px] max-md:mx-1 max-md:text-xs max-md:p-1 p-2 mx-3 rounded-md ${
-            domain.status === "Available"
+          className={`text-white w-[120px] max-md:w-[80px] max-md:mx-1 max-md:text-xs max-md:p-1 p-2 mx-3 rounded-md ${domain.status === "Available"
               ? "bg-home-primary"
               : domain.status === "Added"
-              ? "bg-red-500"
-              : domain.status === "Unavailable"
-              ? "bg-gray-400"
-              : "bg-gray-500"
-          }`}
+                ? "bg-red-500"
+                : domain.status === "Unavailable"
+                  ? "bg-gray-400"
+                  : "bg-gray-500"
+            }`}
           onClick={() => {
             if (domain.status === "Available") {
               handleAddToCart(domain);
@@ -162,8 +222,8 @@ const Hero = () => {
           {domain.status === "Available" && !isInCart(domain)
             ? "Add to cart"
             : domain.status === "Added"
-            ? "Remove"
-            : "Unavailable"}
+              ? "Remove"
+              : "Unavailable"}
         </button>
       </div>
     </div>
@@ -208,15 +268,14 @@ const Hero = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-           <button
-                className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 max-lg:px-2 max-md:text-sm p-2  rounded-r-xl ${
-                  isFetching ? "cursor-wait" : ""
-                }`}
-                onClick={handleSearchClick}
-                disabled={isFetching} // Disable button while loading
-              >
-                {isFetching ? "Searching..." : "Search "}
-              </button>
+          <button
+            className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 max-lg:px-2 max-md:text-sm p-2  rounded-r-xl ${isFetching ? "cursor-wait" : ""
+              }`}
+            onClick={handleSearchClick}
+            disabled={isFetching} // Disable button while loading
+          >
+            {isFetching ? "Searching..." : "Search "}
+          </button>
         </div>
       </div>
       <span className="text-center text-2xl max-2xl:text-xl max-lg:text-lg font-600 pt-[10px] max-lg:pt-10 max-md:pt-10 lg:pt-[120px] pb-[20px] md:pb-[30px] lg:pb-[40px] leading-[20.4px] text-home-body justify-center font-roboto-serif z-10">
@@ -244,15 +303,14 @@ const Hero = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                 <button
-                className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 max-lg:px-2 max-md:text-sm p-2  rounded-r-xl ${
-                  isFetching ? "cursor-wait" : ""
-                }`}
-                onClick={handleSearchClick}
-                disabled={isFetching} // Disable button while loading
-              >
-                {isFetching ? "Searching..." : "Search "}
-              </button>
+                <button
+                  className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 max-lg:px-2 max-md:text-sm p-2  rounded-r-xl ${isFetching ? "cursor-wait" : ""
+                    }`}
+                  onClick={handleSearchClick}
+                  disabled={isFetching} // Disable button while loading
+                >
+                  {isFetching ? "Searching..." : "Search "}
+                </button>
               </div>
             </div>
             <div className="p-2 h-[300px] overflow-y-scroll hide-scrollbar">
