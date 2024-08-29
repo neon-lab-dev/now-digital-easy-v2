@@ -26,7 +26,7 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
     const [fullName, setFullName] = useState<string>("User");
 
     useEffect(() => {
-        const storedName = localStorage.getItem("userData") || "User";
+        const storedName = window.localStorage.getItem("userData") || "User";
         setFullName(storedName);
     }, []);
 
@@ -56,8 +56,8 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
 
     const handleLogout = () => {
         dispatch(logout());
-        localStorage.removeItem('token');
-        localStorage.removeItem('userData');
+        window.localStorage.removeItem('token');
+        window.localStorage.removeItem('userData');
         window.location.reload(); // Optionally refresh the page
     };
 

@@ -53,7 +53,7 @@ const SummaryPage = () => {
                     try {
                         const cart: CartItem[] = JSON.parse(cartItem);
                         products = cart.map((item) => ({
-                            name: item.domainName,
+                            name: item?.name,
                             link: item?.link,
                             img: CART?.google,
                             price: item.price ? `₹${item.price[0].registerPrice}` : "N/A",
