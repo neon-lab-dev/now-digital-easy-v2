@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 interface CartItem {
+    [x: string]: any;
     domainprice: any;  link: string;
     price?: { registerPrice: string }[]; 
     // Adjust this based on your actual data structure
