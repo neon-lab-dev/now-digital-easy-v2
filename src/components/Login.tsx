@@ -1,21 +1,15 @@
 import { useMutation } from '@tanstack/react-query';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useTransition, animated } from 'react-spring';
 import { useAppDispatch } from '../store/store';
 import { loginSuccess, loginFailure } from '../store/authSlice';
+import Router from 'next/router';
+import router from 'next/router';
+import { json } from 'stream/consumers';
 
-interface LoginProps {
-    onClose: () => void;
-    isOpen: boolean;
-}
-
-interface LoginFormInputs {
-    email: string;
-    password: string;
-}
-
+// Define the mutation function
 const loginUser = async (data: { email: string; password: string }) => {
     const response = await fetch('https://liveserver.nowdigitaleasy.com:5000/client/signin', {
         method: 'POST',
@@ -29,6 +23,16 @@ const loginUser = async (data: { email: string; password: string }) => {
     }
     return response.json();
 };
+
+interface LoginProps {
+    onClose: () => void;
+    isOpen: boolean;
+}
+
+interface LoginFormInputs {
+    email: string;
+    password: string;
+}
 
 const Login: React.FC<LoginProps> = ({ onClose, isOpen }) => {
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
@@ -46,11 +50,10 @@ const Login: React.FC<LoginProps> = ({ onClose, isOpen }) => {
     const mutation = useMutation({
         mutationFn: loginUser,
         onSuccess: (data) => {
-            dispatch(loginSuccess({ token: data.token, user: data.data.fullName })); // Dispatching token and user data
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('userData',data.data.fullName); // Store user data separately
+            dispatch(loginSuccess(data.token));
+            localStorage.setItem('data',JSON.stringify(data))
             toast.success('Login successful');
-            setIsLoggedIn(true);
+            // Handle successful login here (e.g., redirect)
             onClose(); // Optionally close the login modal
         },
         onError: (error: Error) => {

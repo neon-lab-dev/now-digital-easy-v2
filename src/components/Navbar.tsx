@@ -1,5 +1,4 @@
-"use client";
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
 import Link from 'next/link';
@@ -144,6 +143,7 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
                 <SignUpUser onClose={() => setActiveModal(null)} isOpen={activeModal === 'signup'} />
             )}
         </div>
+
     );
 };
 
