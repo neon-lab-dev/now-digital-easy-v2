@@ -56,7 +56,7 @@ const PaymentPage = () => (
                 </AccordionItem>
             </Accordion>
         </div>
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 pb-16">
             <tbody className="bg-white divide-y divide-gray-200 whitespace-nowrap">
                 <tr>
                     <td className="text-sm text-gray-800 px-2">

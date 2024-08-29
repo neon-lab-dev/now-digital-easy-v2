@@ -70,10 +70,6 @@ const RegistrationPage = () => (
                 Create Account
             </button>
         </div>
-        <div className='text-center text-sm text-gray-500'>
-            Already have an account?
-            <a href="#" className="font-bold leading-6 text-blue-600">Sign in</a>
-        </div>
     </div>
 );
 

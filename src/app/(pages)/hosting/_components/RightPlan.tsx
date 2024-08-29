@@ -1,9 +1,8 @@
-"use client";
+// pages/RightPlan.tsx or components/RightPlan.tsx
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { IMAGES } from '@/assets';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import PlanModal from './PlanModal'; // Import the PlanModal component
 import SelectPlan from '@/components/SelectPlan';
 
 interface Domain {
@@ -14,8 +13,6 @@ interface Domain {
 interface Price { period: string; amount: number; }
 interface PlanFeatureProps { title: string; starter: string; advanced: string; premium: string; }
 interface PlanCardProps { name: string; price: string; isStarter?: boolean; onAddToCart: () => void; showDropdown: boolean; }
-
-
 
 const fetchDomainAvailability = async (domain: string) => {
     const response = await axios.post(
@@ -40,15 +37,12 @@ const fetchPlans = async () => {
 const RightPlan: React.FC = () => {
     const { data } = useQuery({ queryKey: ["plans"], queryFn: fetchPlans });
     const [activeDropdown, setActiveDropdown] = useState < string | null > (null);
-    const [showInputForm, setShowInputForm] = useState < boolean > (false);
     const [currentStep, setCurrentStep] = useState < number > (0);
     const [isModalOpen, setIsModalOpen] = useState < boolean > (false);
     const [selectedPeriod, setSelectedPeriod] = useState('monthly');
     const [price, setPrice] = useState < number > (0);
     const [searchQuery, setSearchQuery] = useState("");
-
-
-
+    const [showInputForm, setShowInputForm] = useState < boolean > (true); // Ensure this state is defined
 
     // Update price based on selected period
     useEffect(() => {
@@ -57,6 +51,8 @@ const RightPlan: React.FC = () => {
             setPrice(initialPrice ? initialPrice.amount : 0);
         }
     }, [data, selectedPeriod]);
+
+    console.log(price)
 
     const handleAddToCart = (planName: string) => {
         setActiveDropdown(activeDropdown === planName ? null : planName);
@@ -76,7 +72,7 @@ const RightPlan: React.FC = () => {
         setPrice(selectedPrice ? selectedPrice.amount : 0);
     };
 
-    const { data: domains = [], refetch, isFetching } = useQuery<Domain[]>({
+    const { data: domains = [], refetch, isFetching } = useQuery < Domain[] > ({
         queryKey: ["domainAvailability", searchQuery],
         queryFn: () => fetchDomainAvailability(searchQuery),
         enabled: false,
@@ -87,167 +83,6 @@ const RightPlan: React.FC = () => {
             setIsModalOpen(true);
         });
     };
-
-    const DomainItem = ({ domain }: { domain: Domain }) => (
-        <div className="flex justify-between bg-white items-center content-center  m-3">
-            <div className="flex flex-col mx-4 max-md:mx-1 p-3 max-md:p-1">
-                <span className="font-900 text-lg max-lg:text-md max-md:text-xs">{domain.name}</span>
-                <div>
-                    <span className={`text-[14px] w-[30px] max-md:text-xs ${domain.status === 'Available' ? 'text-green-500' :
-                        domain.status === 'Added' ? 'text-yellow-600' :
-                            domain.status === 'Unavailable' ? 'text-red-500' :
-                                'text-gray-500'
-                        }`}>
-                        {domain.status}
-                    </span>
-                </div>
-            </div>
-            <div className="flex content-center items-center gap-8">
-                <select className="border  rounded-md p-1 max-md:hidden" disabled={domain.status !== 'Available'}>
-                    {[1, 2, 3, 5].map((year) => (
-                        <option key={year} value={year}>
-                            {year} year{year > 1 ? 's' : ''}
-                        </option>
-                    ))}
-                </select>
-                <div className="w-[150px] max-md:w-[40px]">
-                    <span className="font-900 w-[200px]  text-center text-2xl max-lg:text-sm leading-tight">
-                        {domain.price && domain.price.length > 0 ? `₹${domain.price[0].registerPrice}` : 'N/A'}
-                    </span>
-                    <div className="">
-                        <span className="text-[14px] text-center max-md:hidden  max-lg:text-xs ">
-                            {domain.price && domain.price.length > 0 ? `then   ₹${domain.price[0].registerPrice + 2}/Year` : ''}
-                        </span>
-                    </div>
-                </div>
-                <button
-                    className={`text-white w-[120px]  max-md:w-[80px] max-md:mx-1 max-md:text-xs max-md:p-1 p-2 mx-3 rounded-md ${domain.status === 'Available'
-                        ? 'bg-home-primary'
-                        : domain.status === 'Added'
-                            ? 'bg-red-500'
-                            : domain.status === 'Unavailable'
-                                ? 'bg-gray-400'
-                                : 'bg-gray-500'
-                        }`}
-                    disabled={domain.status !== 'Available' && domain.status !== 'Added'} // Fix: Allow button to be clickable for 'Added' status
-                >
-                    {domain.status === 'Available'
-                        ? 'Add to cart'
-                        : domain.status === 'Added'
-                            ? 'Remove'
-                            : 'Unavailable'}
-                </button>
-            </div>
-        </div>
-    );
-    const PlanModal: React.FC = () => (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
-            <div className="relative w-[80vw]  rounded-lg border border-black shadow-lg mb-8">
-                <Image
-                    src={IMAGES.HostBanner}
-                    alt="home banner"
-                    layout="fill"
-                    objectFit="cover"
-                    quality={100}
-                    className="absolute inset-0  rounded-lg bg-gradient-hosting-hero" // Ensure the image is behind the content
-                />
-                <div className="p-4 relative">
-                    {currentStep === 0 && (
-                        <div>
-                            {activeDropdown === "Starter" && <div >
-                                <SelectPlan handleNextStep={handleNextStep}  index={0} />                            
-                            </div>}
-                            {activeDropdown === "Advanced" && <div >
-                                <SelectPlan handleNextStep={handleNextStep}  index={1} />                            
-
-                            </div>}
-                            {activeDropdown === "Premium" && <div >
-                                <SelectPlan handleNextStep={handleNextStep}  index={2} />                            
-
-                            </div>}
-                        </div>
-                    )}
-                    {currentStep === 1 && (
-                        <div className='flex flex-col items-start px-10'>
-                            <div className='flex items-center gap-16 mx-3'>
-                                <div className='flex items-center gap-4'>
-                                    <input
-                                        type="radio"
-                                        name="domainOption"
-                                        id="newDomain"
-                                        onChange={() => setShowInputForm(true)}
-                                    />
-                                    <span className=' font-roboto-serif text-3xl'>
-                                        Register a New Domain
-                                    </span>
-                                </div>
-                                <div className='flex items-center gap-4'>
-                                    <input
-                                        type="radio"
-                                        name="domainOption"
-                                        id="existingDomain"
-                                        onChange={() => setShowInputForm(false)}
-                                    />
-                                    <span className=' font-roboto-serif text-3xl '>
-                                        I already have a Domain Name
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="flex w-full pb-6 max-md:pb-0">
-                                {showInputForm ? (
-                                    <div>
-                                        <div className="flex m-3 rounded-xl">
-                                            <input
-                                                className="w-[60vw] p-6 border rounded-l-xl max-md:placeholder:text-[10px]"
-                                                placeholder="Find and purchase a domain name"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                autoFocus
-                                            />
-                                            <button
-                                                className={`bg-home-primary text-white  text-xl font-roboto font-700 px-6 p-2  rounded-r-xl ${isFetching ? "cursor-wait" : ""
-                                                    }`}
-                                                onClick={handleSearchClick}
-                                                disabled={isFetching} // Disable button while loading
-                                            >
-                                                {isFetching ? "Searching..." : "Check Availability "}
-                                            </button>
-                                        </div>
-                                        <div className="p-2 h-[300px] overflow-y-scroll hide-scrollbar">
-                                            <div>
-                                                {domains.map((domain, index) => (
-                                                    <DomainItem key={index} domain={domain} />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex m-3 rounded-xl">
-                                        <input
-                                            className="w-[60vw] p-6 border rounded-l-xl max-md:placeholder:text-[10px]"
-                                            placeholder="Enter your domain name"
-
-                                        />
-                                        <button
-                                            className="bg-domain-primary text-xl max-md:text-sm text-white px-8 max-md:px-2 rounded-r-xl"
-                                        >
-                                            <span className="font-roboto font-700">Add to Cart</span>
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="absolute top-[-15px] right-[-12px]  w-[40px] h-[40px] tex-2xl bg-gray-300 rounded-full  font-900"
-                >
-                    <span>✖</span>
-                </button>
-            </div>
-        </div>
-    );
 
     const PlanFeature: React.FC<PlanFeatureProps> = ({ title, starter, advanced, premium }) => (
         <tr className="border-t-[1px] border-black border-opacity-65 font-roboto-serif">
@@ -315,7 +150,55 @@ const RightPlan: React.FC = () => {
                     </table>
                 </div>
             </div>
-            {isModalOpen && <PlanModal />}
+            {activeDropdown === "Starter" && <div >
+                <PlanModal 
+                isOpen={isModalOpen}
+                currentStep={currentStep}
+                handleNextStep={handleNextStep}
+                setIsModalOpen={setIsModalOpen}
+                showInputForm={showInputForm}
+                setShowInputForm={setShowInputForm}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                domains={domains}
+                refetch={refetch}
+                isFetching={isFetching}
+                index={0}
+            />
+            </div>}
+            {activeDropdown === "Advanced" && <div >
+                <PlanModal 
+                isOpen={isModalOpen}
+                currentStep={currentStep}
+                handleNextStep={handleNextStep}
+                setIsModalOpen={setIsModalOpen}
+                showInputForm={showInputForm}
+                setShowInputForm={setShowInputForm}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                domains={domains}
+                refetch={refetch}
+                isFetching={isFetching}
+                index={1}
+
+            />
+            </div>}
+            {activeDropdown === "Premium" && <div >
+                <PlanModal 
+                isOpen={isModalOpen}
+                currentStep={currentStep}
+                handleNextStep={handleNextStep}
+                setIsModalOpen={setIsModalOpen}
+                showInputForm={showInputForm}
+                setShowInputForm={setShowInputForm}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                domains={domains}
+                refetch={refetch}
+                isFetching={isFetching}
+                index={2}
+            />
+            </div>}
         </div>
     );
 };

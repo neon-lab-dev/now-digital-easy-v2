@@ -5,6 +5,15 @@ import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TextTransition, { presets } from "react-text-transition";
 import axios from "axios";
+import Cart from "@/components/Cart";
+import { useDispatch, useSelector } from "react-redux";
+import { setIsSidebarOpen } from "@/store/sidebarSlice";
+import {
+  handleAddAItemToCartService,
+  handleGetAllCartItemsService,
+  handleUpdateCartService,
+} from "@/services/cart";
+import { toast } from "sonner";
 
 interface Domain {
   name: string;
@@ -27,22 +36,44 @@ const fetchDomainAvailability = async (domain: string) => {
   );
   return response.data.response.map((item: any) => ({
     name: item.domain,
-    status: item.status === "available" ? "Available" : item.status === "unavailable" ? "Unavailable" : "Unknown",
+    status:
+      item.status === "available"
+        ? "Available"
+        : item.status === "unavailable"
+        ? "Unavailable"
+        : "Unknown",
     price: item.price && item.price.length > 0 ? item.price : undefined,
   }));
 };
 
 const Hero = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const dispatch = useDispatch();
+  const { isSidebarOpen } = useSelector((state: any) => state.sidebar);
+  const { isAuthenticated } = useSelector((state: any) => state.auth);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [cart, setCart] = useState<Domain[]>([]);
+  const [cart, setCart] = useState<Domain[]>(() => {
+    // Load the cart from local storage if it exists
+    const savedCart = localStorage.getItem("cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
 
-  const { data: domains = [], refetch ,isFetching } = useQuery<Domain[]>({
+  const {
+    data: domains = [],
+    refetch,
+    isFetching,
+  } = useQuery<Domain[]>({
     queryKey: ["domainAvailability", searchQuery],
     queryFn: () => fetchDomainAvailability(searchQuery),
     enabled: false,
+  });
+
+  const { isLoading, isError, data } = useQuery({
+    queryKey: ["cart"],
+    queryFn: () => handleGetAllCartItemsService("INR"),
+    enabled: isAuthenticated,
   });
 
   useEffect(() => {
@@ -53,23 +84,46 @@ const Hero = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    // Save the cart to local storage whenever it changes
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
+
   const handleSearchClick = () => {
     refetch().then(() => {
       setIsModalOpen(true);
     });
   };
-
+  const { mutate, isPending: isAddToCartPending } = useMutation({
+    mutationFn: (data: any) => handleAddAItemToCartService(data),
+    onError: (error: string) => {
+      toast.error(error);
+    },
+    onSuccess: () => {
+      toast.success("Domain added to cart");
+      queryClient.invalidateQueries({
+        queryKey: ["cart"],
+      });
+      // dispatch(setIsSidebarOpen(!isSidebarOpen));
+      // dispatch(setIsSideBarActive(true));
+    },
+  });
   const handleCloseModal = () => setIsModalOpen(false);
 
   const handleAddToCart = (domain: Domain) => {
-    setCart([...cart, domain]);
-    queryClient.setQueryData<Domain[]>(
-      ["domainAvailability", searchQuery],
-      (oldDomains = []) =>
-        oldDomains.map((d) =>
-          d.name === domain.name ? { ...d, status: "Added" } : d
-        )
-    );
+    if (isAuthenticated) {
+      const data = queryClient.getQueryData<any>(["cart"]);
+      mutate(data);
+    } else {
+      setCart([...cart, domain]);
+      queryClient.setQueryData<Domain[]>(
+        ["domainAvailability", searchQuery],
+        (oldDomains = []) =>
+          oldDomains.map((d) =>
+            d.name === domain.name ? { ...d, status: "Added" } : d
+          )
+      );
+    }
   };
 
   const handleRemoveFromCart = (domain: Domain) => {
@@ -98,12 +152,15 @@ const Hero = () => {
     }
   };
 
-  const isInCart = (domain: Domain) => cart.some((item) => item.name === domain.name);
+  const isInCart = (domain: Domain) =>
+    cart.some((item) => item.name === domain.name);
 
   const DomainItem = ({ domain }: { domain: Domain }) => (
     <div className="flex justify-between bg-white items-center content-center m-3">
       <div className="flex flex-col mx-4 max-md:mx-1 p-3 max-md:p-1">
-        <span className="font-900 text-lg max-lg:text-md max-md:text-xs">{domain.name}</span>
+        <span className="font-900 text-lg max-lg:text-md max-md:text-xs">
+          {domain.name}
+        </span>
         <div>
           <span
             className={`text-[14px] w-[30px] max-md:text-xs ${
@@ -121,7 +178,10 @@ const Hero = () => {
         </div>
       </div>
       <div className="flex content-center items-center gap-8">
-        <select className="border rounded-md p-1 max-md:hidden" disabled={domain.status !== "Available"}>
+        <select
+          className="border rounded-md p-1 max-md:hidden"
+          disabled={domain.status !== "Available"}
+        >
           {[1, 2, 3, 5].map((year) => (
             <option key={year} value={year}>
               {year} year{year > 1 ? "s" : ""}
@@ -130,7 +190,9 @@ const Hero = () => {
         </select>
         <div className="w-[150px] max-md:w-[40px]">
           <span className="font-900 w-[200px] text-center text-2xl max-lg:text-sm leading-tight">
-            {domain.price && domain.price.length > 0 ? `₹${domain.price[0].registerPrice}` : "N/A"}
+            {domain.price && domain.price.length > 0
+              ? `₹${domain.price[0].registerPrice}`
+              : "N/A"}
           </span>
           <div className="">
             <span className="text-[14px] text-center max-md:hidden max-lg:text-xs ">
@@ -185,12 +247,14 @@ const Hero = () => {
       />
       <div className="flex flex-col items-center gap-2 z-10">
         <div className="font-900 text-[16px] md:text-[33px] w-auto xl:text-[46px] 2xl:text-[56px] leading-[30px] md:leading-[46px] xl:leading-[67px] text-primary-500 flex gap-[5px] justify-center xl:w-[1300px]">
-          <span className="w-auto">Expand Your Horizons With {" "}</span>
+          <span className="w-auto">Expand Your Horizons With </span>
           <TextTransition
             direction="down"
             springConfig={presets.gentle}
             delay={0}
-            style={{ color: getTextColor(words[currentWordIndex % words.length]) }}
+            style={{
+              color: getTextColor(words[currentWordIndex % words.length]),
+            }}
           >
             {words[currentWordIndex % words.length]}
           </TextTransition>
@@ -208,22 +272,34 @@ const Hero = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-           <button
-                className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 max-lg:px-2 max-md:text-sm p-2  rounded-r-xl ${
-                  isFetching ? "cursor-wait" : ""
-                }`}
-                onClick={handleSearchClick}
-                disabled={isFetching} // Disable button while loading
-              >
-                {isFetching ? "Searching..." : "Search "}
-              </button>
+          <button
+            className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 max-lg:px-2 max-md:text-sm p-2  rounded-r-xl ${
+              isFetching ? "cursor-wait" : ""
+            }`}
+            onClick={handleSearchClick}
+            disabled={isFetching} // Disable button while loading
+          >
+            {isFetching ? "Searching..." : "Search "}
+          </button>
         </div>
       </div>
       <span className="text-center text-2xl max-2xl:text-xl max-lg:text-lg font-600 pt-[10px] max-lg:pt-10 max-md:pt-10 lg:pt-[120px] pb-[20px] md:pb-[30px] lg:pb-[40px] leading-[20.4px] text-home-body justify-center font-roboto-serif z-10">
         12,000+ global businesses trust us to transform & grow digitally
       </span>
       <div className="flex justify-center items-center gap-4 md:gap-8 lg:gap-16 pb-6 overflow-hidden z-10">
-        {[IMAGES.brand2, IMAGES.brand3, IMAGES.brand6, IMAGES.brand4, IMAGES.brand5, IMAGES.brand1, IMAGES.brand7, ICONS.gol, IMAGES.brand1, IMAGES.brand7, ICONS.gol].map((src, index) => (
+        {[
+          IMAGES.brand2,
+          IMAGES.brand3,
+          IMAGES.brand6,
+          IMAGES.brand4,
+          IMAGES.brand5,
+          IMAGES.brand1,
+          IMAGES.brand7,
+          ICONS.gol,
+          IMAGES.brand1,
+          IMAGES.brand7,
+          ICONS.gol,
+        ].map((src, index) => (
           <Image key={index} src={src} alt="" className="w-[120px]" />
         ))}
       </div>
@@ -244,15 +320,15 @@ const Hero = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                 <button
-                className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 max-lg:px-2 max-md:text-sm p-2  rounded-r-xl ${
-                  isFetching ? "cursor-wait" : ""
-                }`}
-                onClick={handleSearchClick}
-                disabled={isFetching} // Disable button while loading
-              >
-                {isFetching ? "Searching..." : "Search "}
-              </button>
+                <button
+                  className={`bg-home-primary text-white  text-xl font-roboto font-700 px-10 max-lg:px-2 max-md:text-sm p-2  rounded-r-xl ${
+                    isFetching ? "cursor-wait" : ""
+                  }`}
+                  onClick={handleSearchClick}
+                  disabled={isFetching} // Disable button while loading
+                >
+                  {isFetching ? "Searching..." : "Search "}
+                </button>
               </div>
             </div>
             <div className="p-2 h-[300px] overflow-y-scroll hide-scrollbar">
@@ -265,9 +341,16 @@ const Hero = () => {
             {cart.length > 0 && (
               <div className="flex items-center justify-between my-4 font-roboto font-700 bg-home-body px-10 max-md:px-2 max-md:mx-4 mx-5 py-3 max-md:py-1">
                 <span className="text-2xl text-white max-lg:text-sm">
-                  {cart.length} item{cart.length > 1 ? "s" : ""} added to your cart
+                  {cart.length} item{cart.length > 1 ? "s" : ""} added to your
+                  cart
                 </span>
-                <button className="text-2xl text-black bg-home-secondary mx-4 px-10 py-2 rounded-md max-md:mx-0 max-md:px-2 max-md:text-sm max-md:py-1">
+                <button
+                  onClick={() => {
+                    dispatch(setIsSidebarOpen(!isSidebarOpen));
+                    setIsModalOpen(false);
+                  }}
+                  className="text-2xl text-black bg-home-secondary mx-4 px-10 py-2 rounded-md max-md:mx-0 max-md:px-2 max-md:text-sm max-md:py-1"
+                >
                   View Cart
                 </button>
               </div>
