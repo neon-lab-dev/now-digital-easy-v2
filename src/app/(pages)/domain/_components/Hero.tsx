@@ -53,6 +53,13 @@ const Hero = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    // Save the cart to local storage whenever it changes
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    console.log("Cart updated and saved to localStorage:", cart);
+  }, [cart]);
+
   const handleSearchClick = () => {
     refetch().then(() => {
       setIsModalOpen(true);
@@ -61,8 +68,38 @@ const Hero = () => {
 
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const handleAddToCart = (domain: Domain) => {
-    setCart([...cart, domain]);
+  const handleAddToCart = async (domain: Domain) => {
+    const cartData = localStorage.getItem("cart");
+    
+    if (cartData && cartData.length > 0) {
+      const token = localStorage.getItem("token");
+      console.log("inside");
+      
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      const data = [
+        {
+          product: "domain",
+          productId: "65703f67747116cd40fdea3a",
+          domainName: "kjkjkjkjkla.in",
+          type: "new",
+          qty: 170,
+          year: 6,
+          EppCode: "",
+        },
+      ];
+
+      const response = await axios.post(
+        "https://liveserver.nowdigitaleasy.com:5000/cart",
+        { data },
+        { headers }
+      );
+      console.log("API response:", response.data);
+    } 
+    setCart((prevCart) => [...prevCart, domain]);
     queryClient.setQueryData<Domain[]>(
       ["domainAvailability", searchQuery],
       (oldDomains = []) =>
