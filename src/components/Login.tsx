@@ -37,8 +37,8 @@ const Login: React.FC<LoginProps> = ({ onClose, isOpen }) => {
 
     useEffect(() => {
         let token;
-        if(typeof window !=='undefined'){
-             token = window.localStorage.getItem('token');
+        if(typeof localStorage !=='undefined'){
+             token = localStorage.getItem('token');
         }
         
         if (token) {
@@ -50,8 +50,8 @@ const Login: React.FC<LoginProps> = ({ onClose, isOpen }) => {
         mutationFn: loginUser,
         onSuccess: (data) => {
             dispatch(loginSuccess({ token: data.token, user: data.data.fullName })); // Dispatching token and user data
-            window.localStorage.setItem('token', data.token);
-            window.localStorage.setItem('userData',data.data.fullName); // Store user data separately
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userData',data.data.fullName); // Store user data separately
             toast.success('Login successful');
             setIsLoggedIn(true);
             onClose(); // Optionally close the login modal

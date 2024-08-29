@@ -17,8 +17,8 @@ const Cart: React.FC<SidebarProps> = ({ onClick }) => {
     const [token, setIsToken] = useState("");
 
     useEffect(()=>{
-        if (typeof window !== "undefined") {
-            const isUserLoggedIn = window.localStorage.getItem("token");
+        if (typeof localStorage !== "undefined") {
+            const isUserLoggedIn = localStorage.localStorage.getItem("token");
             if (isUserLoggedIn) setIsToken(isUserLoggedIn);
         }
     },[])
