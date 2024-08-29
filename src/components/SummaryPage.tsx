@@ -4,9 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 interface CartItem {
-    [x: string]: any;
-    name: string;
-    link: string;
+    domainprice: any;  link: string;
     price?: { registerPrice: string }[]; 
     // Adjust this based on your actual data structure
     domainName:string
@@ -23,8 +21,8 @@ const SummaryPage = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading,setIsLoading]=useState(false);
     useEffect(() => {
-        if (typeof localStorage === 'undefined') return;
-        const token = localStorage.getItem('token');
+        if (typeof window === 'undefined') return;
+        const token = window.localStorage.getItem('token');
     
         const fetchCartItems = async () => {
             let products: Product[] = [];
@@ -48,7 +46,7 @@ const SummaryPage = () => {
                 }
                 setIsLoading(false);
             } else {
-                const cartItem = localStorage.getItem('cart');
+                const cartItem = window.localStorage.getItem('cart');
                 if (cartItem) {
                     setIsLoading(true);
                     try {
@@ -61,7 +59,7 @@ const SummaryPage = () => {
                         }));
                     } catch (error) {
                         console.error("Error parsing cart data:", error);
-                        localStorage.removeItem('cart');
+                        window.localStorage.removeItem('cart');
                     }
                     setIsLoading(false);
                 }
