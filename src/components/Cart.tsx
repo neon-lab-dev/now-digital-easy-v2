@@ -9,7 +9,6 @@ const Cart: React.FC = () => {
   const dispatch = useDispatch();
   const { isSidebarOpen } = useSelector((state: any) => state.sidebar);
   const { isAuthenticated } = useSelector((state: any) => state.auth);
-
   const [currentStep, setCurrentStep] = useState(1);
   const [isLogin, setIsLogin] = useState(true); // State to toggle between login and registration
 
@@ -35,7 +34,7 @@ const Cart: React.FC = () => {
   };
 
   return (
-    <div className="w-full md:w-full lg:w-[40vw] ml-auto bg-white shadow-lg fixed inset-0 z-50">
+    <div className="w-full md:w-full lg:w-[40vw] ml-auto bg-white shadow-lg fixed inset-0 z-50 overflow-scroll hide-scrollbar">
       {/* Header */}
       <div
         style={{

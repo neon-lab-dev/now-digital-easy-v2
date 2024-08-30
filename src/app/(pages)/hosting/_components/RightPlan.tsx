@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import PlanModal from './PlanModal'; // Import the PlanModal component
-import SelectPlan from '@/components/SelectPlan';
 
 interface Domain {
     name: string;
