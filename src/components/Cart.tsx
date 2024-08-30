@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { CART } from "@/assets";
@@ -6,6 +7,7 @@ import SummaryPage from "@/components/SummaryPage";
 import PaymentPage from "./Paymentpage";
 import LoginPage from "./CartLogin";
 import RegistrationPage from "./RegistrationPage";
+import { getLocalStorage } from "@/helper/localStorage";
 
 type SidebarProps = {
     onClick: () => void;
@@ -18,7 +20,8 @@ const Cart: React.FC<SidebarProps> = ({ onClick }) => {
 
     useEffect(()=>{
         if (typeof window !== "undefined") {
-            const isUserLoggedIn = window.localStorage.getItem("token");
+            // const isUserLoggedIn = window.localStorage.getItem("token");
+            const isUserLoggedIn:any = getLocalStorage("token");
             if (isUserLoggedIn) setIsToken(isUserLoggedIn);
         }
     },[])

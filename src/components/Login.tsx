@@ -1,3 +1,4 @@
+"use client";
 import { useMutation } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -5,6 +6,7 @@ import { toast } from 'sonner';
 import { useTransition, animated } from 'react-spring';
 import { useAppDispatch } from '../store/store';
 import { loginSuccess, loginFailure } from '../store/authSlice';
+import { getLocalStorage, setLocalStorage } from '@/helper/localStorage';
 
 interface LoginProps {
     onClose: () => void;
@@ -38,7 +40,8 @@ const Login: React.FC<LoginProps> = ({ onClose, isOpen }) => {
     useEffect(() => {
         let token;
         if(typeof window !=='undefined'){
-             token = window.localStorage.getItem('token');
+            //  token = window.localStorage.getItem('token');
+            token = getLocalStorage('token');
         }
         
         if (token) {
@@ -50,8 +53,10 @@ const Login: React.FC<LoginProps> = ({ onClose, isOpen }) => {
         mutationFn: loginUser,
         onSuccess: (data) => {
             dispatch(loginSuccess({ token: data.token, user: data.data.fullName })); // Dispatching token and user data
-            window.localStorage.setItem('token', data.token);
-            window.localStorage.setItem('userData',data.data.fullName); // Store user data separately
+            // window.localStorage.setItem('token', data.token);
+            // window.localStorage.setItem('userData',data.data.fullName); // Store user data separately
+            setLocalStorage('token', data.token);
+            setLocalStorage('userData',data.data.fullName); 
             toast.success('Login successful');
             setIsLoggedIn(true);
             onClose(); // Optionally close the login modal
