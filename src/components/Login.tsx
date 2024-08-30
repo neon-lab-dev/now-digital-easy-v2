@@ -1,13 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
-import React from 'react';
+import React  from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useTransition, animated } from 'react-spring';
 import { useAppDispatch } from '../store/store';
 import { loginSuccess, loginFailure } from '../store/authSlice';
-import Router from 'next/router';
-import router from 'next/router';
-import { json } from 'stream/consumers';
+import { useState } from 'react';
+import { useEffect } from 'react';
 
 // Define the mutation function
 const loginUser = async (data: { email: string; password: string }) => {
@@ -37,6 +36,18 @@ interface LoginFormInputs {
 const Login: React.FC<LoginProps> = ({ onClose, isOpen }) => {
     const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
     const dispatch = useAppDispatch();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        let token;
+        if(typeof localStorage !=='undefined'){
+             token = localStorage.getItem('token');
+        }
+        
+        if (token) {
+            setIsLoggedIn(true);
+        }
+    }, []);
 
     const mutation = useMutation({
         mutationFn: loginUser,

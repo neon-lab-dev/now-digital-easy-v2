@@ -1,5 +1,6 @@
 "use client";
 import { ICONS, IMAGES } from "@/assets";
+import { log } from "console";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import TextTransition, { presets } from "react-text-transition";
