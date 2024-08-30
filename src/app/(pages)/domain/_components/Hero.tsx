@@ -78,6 +78,7 @@ const Hero = () => {
 
   const handleAddToCart = async (domain: Domain) => {
     if (typeof window === 'undefined') return; 
+console.log(domain,"domaiiiiin");
 
     const token = window.localStorage.getItem('token');
     const newCartItem = {
@@ -86,8 +87,8 @@ const Hero = () => {
       domainName: domain.name,
       type: "new",
       price: domain?.price[0]?.registerPrice,
-      qty: 170,
-      year: 6,
+      qty: 1,
+      year: 1,
       EppCode: "",
     };
   
@@ -99,7 +100,10 @@ const Hero = () => {
         };
 
         const { data: existingCart } = await axios.get("https://liveserver.nowdigitaleasy.com:5000/cart", { headers });
-        const updatedCartItems = [...existingCart.products, newCartItem];
+  
+        const updatedCartItems = existingCart.products?.length
+        ? [...existingCart.products, newCartItem]
+        : [newCartItem];
         const response = await axios.post(
           "https://liveserver.nowdigitaleasy.com:5000/cart",
           { data: updatedCartItems },

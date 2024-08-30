@@ -46,7 +46,11 @@ const RightPlan: React.FC = () => {
     const [selectedPeriod, setSelectedPeriod] = useState('monthly');
     const [price, setPrice] = useState < number > (0);
     const [searchQuery, setSearchQuery] = useState("");
-
+    const [cart, setCart] = useState< Domain[] >(() => {
+        const savedCart = localStorage.getItem("cart");
+        return savedCart ? JSON.parse(savedCart) : [];
+      });
+    
 
 
 
@@ -57,6 +61,69 @@ const RightPlan: React.FC = () => {
             setPrice(initialPrice ? initialPrice.amount : 0);
         }
     }, [data, selectedPeriod]);
+    useEffect(() => {
+        // Save the cart to local storage whenever it changes
+        localStorage.setItem("cart", JSON.stringify(cart));
+        console.log("Cart updated and saved to localStorage:", cart);
+        }, [cart]);
+    const handleAddToCartFunction=async(domain:Domain)=>{
+        if (typeof window === 'undefined') return; 
+    
+      
+        
+            const token = window.localStorage.getItem('token');
+            const newCartItem = {
+              product: "hosting",
+              productId:"6620bf5b9d26017a073f5c33",
+              domainName: domain.name,
+              type: "new",
+              price: domain?.price[0]?.registerPrice,
+              qty: 1,
+              year: 1,
+              EppCode: "",
+              period: "oneTimeMonthly",
+            };
+            
+           
+            console.log(domain,"domaiiiiin for hosting");
+            if (token) {
+              try {
+                const headers = {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                };
+        
+                const { data: existingCart } = await axios.get("https://liveserver.nowdigitaleasy.com:5000/cart", { headers });
+          
+                const updatedCartItems = existingCart.products?.length
+                ? [...existingCart.products, newCartItem]
+                : [newCartItem];
+                const response = await axios.post(
+                  "https://liveserver.nowdigitaleasy.com:5000/cart",
+                  { data: updatedCartItems },
+                  { headers }
+                );
+                console.log("API response for hosting:", response.data);
+              } catch (error) {
+                console.error("Failed to add to cart:", error);
+                return;
+              }
+            } else {
+              const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+              cart.push(newCartItem);
+              localStorage.setItem("cart", JSON.stringify(cart));
+              console.log("Cart updated and saved to localStorage for hosting:", cart);
+            }
+          
+            setCart((prevCart) => [...prevCart, domain]);
+            // queryClient.setQueryData<Domain[]>(
+            //   ["domainAvailability", searchQuery],
+            //   (oldDomains = []) =>
+            //     oldDomains.map((d) =>
+            //       d.name === domain.name ? { ...d, status: "Added" } : d
+            //     )
+            // );
+    }
 
     const handleAddToCart = (planName: string) => {
         setActiveDropdown(activeDropdown === planName ? null : planName);
@@ -130,6 +197,11 @@ const RightPlan: React.FC = () => {
                                 : 'bg-gray-500'
                         }`}
                     disabled={domain.status !== 'Available' && domain.status !== 'Added'} // Fix: Allow button to be clickable for 'Added' status
+                    onClick={() => {
+                        if (domain.status === "Available") {
+                            handleAddToCartFunction(domain);
+                        } 
+                        }}
                 >
                     {domain.status === 'Available'
                         ? 'Add to cart'

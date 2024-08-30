@@ -56,12 +56,81 @@ const RightPlan: React.FC = () => {
     const [price, setPrice] = useState < number > (0);
     const [searchQuery, setSearchQuery] = useState("");
     // Update price based on selected period
+    const [cart, setCart] = useState< Domain[] >(() => {
+        const savedCart = localStorage.getItem("cart");
+        return savedCart ? JSON.parse(savedCart) : [];
+      });
+    
     useEffect(() => {
         if (data && data.product && data.product.length > 0) {
             const initialPrice = data.product[0].price.find((p: { period: string; }) => p.period === selectedPeriod);
             setPrice(initialPrice ? initialPrice.amount : 0);
         }
     }, [data, selectedPeriod]);
+
+    useEffect(() => {
+        // Save the cart to local storage whenever it changes
+        localStorage.setItem("cart", JSON.stringify(cart));
+        console.log("Cart updated and saved to localStorage:", cart);
+        }, [cart]);
+const handleAddToCartFunction=async(domain:Domain)=>{
+    if (typeof window === 'undefined') return; 
+
+  
+    
+        const token = window.localStorage.getItem('token');
+        const newCartItem = {
+          product: "gsuite",
+          productId:"6570483b323fa70326088843",
+          domainName: domain.name,
+          type: "new",
+          price: "domain?.price[0]?.registerPrice",
+          qty: 1,
+          year: 1,
+          EppCode: "",
+          period: "Annual-Monthly",
+        };
+        
+       
+        console.log(domain,"domaiiiiin for gsuite");
+        if (token) {
+          try {
+            const headers = {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            };
+    
+            const { data: existingCart } = await axios.get("https://liveserver.nowdigitaleasy.com:5000/cart", { headers });
+      
+            const updatedCartItems = existingCart.products?.length
+            ? [...existingCart.products, newCartItem]
+            : [newCartItem];
+            const response = await axios.post(
+              "https://liveserver.nowdigitaleasy.com:5000/cart",
+              { data: updatedCartItems },
+              { headers }
+            );
+            console.log("API response for gsuite:", response.data);
+          } catch (error) {
+            console.error("Failed to add to cart:", error);
+            return;
+          }
+        } else {
+          const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+          cart.push(newCartItem);
+          localStorage.setItem("cart", JSON.stringify(cart));
+          console.log("Cart updated and saved to localStorage for gsuite:", cart);
+        }
+      
+        setCart((prevCart) => [...prevCart, domain]);
+        // queryClient.setQueryData<Domain[]>(
+        //   ["domainAvailability", searchQuery],
+        //   (oldDomains = []) =>
+        //     oldDomains.map((d) =>
+        //       d.name === domain.name ? { ...d, status: "Added" } : d
+        //     )
+        // );
+}
 
     const handleAddToCart = (planName: string) => {
         setActiveDropdown(activeDropdown === planName ? null : planName);
@@ -275,7 +344,8 @@ const RightPlan: React.FC = () => {
                     </span>
                     <div className="">
                         <span className="text-[14px] text-center max-md:hidden  max-lg:text-xs ">
-                            {domain.price && domain.price.length > 0 ? `then   ₹${domain.price[0].registerPrice + 2}/Year` : ''}
+                            {domain.price && domain.price.length > 0 ? 
+                            `then   ₹${domain.price[0].registerPrice + 2}/Year` : ''}
                         </span>
                     </div>
                 </div>
@@ -289,6 +359,11 @@ const RightPlan: React.FC = () => {
                                 : 'bg-gray-500'
                         }`}
                     disabled={domain.status !== 'Available' && domain.status !== 'Added'} // Fix: Allow button to be clickable for 'Added' status
+                    onClick={() => {
+                        if (domain.status === "Available") {
+                            handleAddToCartFunction(domain);
+                        } 
+                        }}
                 >
                     {domain.status === 'Available'
                         ? 'Add to cart'

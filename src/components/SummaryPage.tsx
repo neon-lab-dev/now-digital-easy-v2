@@ -6,6 +6,9 @@ import axios from 'axios';
 interface CartItem {
     name: string;
     link: string;
+    domainprice: any; 
+    gsuitePrice:any;
+    pleskPrice:any;
     price?: { registerPrice: string }[]; 
     // Adjust this based on your actual data structure
     domainName:string
@@ -35,11 +38,20 @@ const SummaryPage = () => {
                 };
                 try {
                     const { data } = await axios.get("https://liveserver.nowdigitaleasy.com:5000/cart", { headers });
+                console.log(data,"imp!!!!");
+                
+                    
                     products = data.products.map((item: CartItem) => ({
                         name: item.domainName,
                         link: item?.link,
                         img: CART?.google,
-                        price: item?.domainprice ? `₹${item?.domainprice}` : "N/A",
+                        price : item.domainprice 
+                            ? `₹${item.domainprice}` 
+                            : item.gsuitePrice 
+                                ? `₹${item.gsuitePrice}` 
+                                : item.pleskPrice 
+                                    ? `₹${item.pleskPrice}` 
+                                    : "N/A"
                     }));
                 } catch (error) {
                     console.error("Error fetching cart data:", error);
@@ -100,19 +112,20 @@ const SummaryPage = () => {
                                 <td className="flex items-center px-4 py-4 text-sm md:text-base lg:text-lg text-gray-800">
                                     <Image src={product.img} alt={product.name} className="w-6 h-6 md:w-12 md:h-12 lg:w-12 lg:h-12" />
                                     <div className="ml-2">
-                                        <span className=' font-900'>Google Workspace</span>
+                                        {/* <span className=' font-900'>Google Workspace</span> */}
                                         <h3 className="text-xs md:text-sm lg:text-base font-semibold">{product.name}</h3>
-                                        <a href={product.link} className="text-blue-500 text-xs md:text-sm lg:text-base">{product.link}</a>
+                                        {/* <a href={product.link} className="text-blue-500 text-xs md:text-sm lg:text-base">{product.link}</a> */}
                                     </div>
                                 </td>
                                 <td className="text-sm md:text-base lg:text-lg text-gray-800">
                                     <div className="relative">
-                                        <select className="w-full h-10 border border-gray-300 text-sm md:text-base lg:text-lg text-gray-800 outline-none bg-white hover:bg-gray-50">
+                                    <h2 className="text-xs md:text-sm lg:text-base font-semibold">{1}</h2>
+                                        {/* <select className="w-full h-10 border border-gray-300 text-sm md:text-base lg:text-lg text-gray-800 outline-none bg-white hover:bg-gray-50">
                                             <option value="1">Annually</option>
                                             <option value="2">Quarterly</option>
                                             <option value="3">Half Yearly</option>
                                             <option value="4">Monthly</option>
-                                        </select>
+                                        </select> */}
                                     </div>
                                 </td>
                                 <td className="px-4 py-4 text-sm md:text-base lg:text-lg text-gray-800">
