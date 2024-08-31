@@ -10,6 +10,7 @@ import ProductDropDown from './ProductDropDown';
 import Login from './Login';
 import SignUpUser from './SignUp';
 import { logout } from '@/store/authSlice';
+import { getLocalStorage, removeLocalStorage } from '@/helper/localStorage';
 
 interface NavbarProps {
     navbarBg: string;
@@ -26,7 +27,7 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
     const [fullName, setFullName] = useState<string>("User");
 
     useEffect(() => {
-        const storedName = window.localStorage.getItem("userData") || "User";
+        const storedName:any = getLocalStorage("userData") || "User";
         setFullName(storedName);
     }, []);
 
@@ -56,8 +57,8 @@ const Navbar: React.FC<NavbarProps> = ({ navbarBg }) => {
 
     const handleLogout = () => {
         dispatch(logout());
-        window.localStorage.removeItem('token');
-        window.localStorage.removeItem('userData');
+        removeLocalStorage('token');
+        removeLocalStorage('userData');
         window.location.reload(); // Optionally refresh the page
     };
 

@@ -43,8 +43,11 @@ const Hero = () => {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [cart, setCart] = useState< Domain[] >(() => {
     if (typeof window !=='undefined') {
+     
       const savedCart:any = getLocalStorage("cart");
-      return savedCart ? JSON.parse(savedCart) : [];
+      console.log(savedCart);
+      
+      return savedCart ?(savedCart) : [];
     }
   });
 
@@ -79,7 +82,7 @@ const Hero = () => {
 
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const handleAddToCart = async (domain: Domain) => {
+  const handleAddToCart = async (domain: any) => {
     if (typeof window === 'undefined') return; 
 console.log(domain,"domaiiiiin");
 
@@ -120,7 +123,6 @@ const token = getLocalStorage('token');
     } else {
       const cart = JSON.parse(getLocalStorage("cart") || "[]");
       cart.push(newCartItem);
-      localStorage.setItem("cart", JSON.stringify(cart));
       // localStorage.setItem("cart", JSON.stringify(cart));
       setLocalStorage("cart", JSON.stringify(cart));
       console.log("Cart updated and saved to localStorage:", cart);

@@ -2,6 +2,7 @@ import Image, { StaticImageData } from 'next/image';
 import { CART } from '@/assets';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getLocalStorage, removeLocalStorage } from '@/helper/localStorage';
 
 interface CartItem {
     name: string;
@@ -26,7 +27,7 @@ const SummaryPage = () => {
     const [isLoading,setIsLoading]=useState(false);
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        const token = window.localStorage.getItem('token');
+        const token = getLocalStorage('token');
     
         const fetchCartItems = async () => {
             let products: Product[] = [];
@@ -41,7 +42,7 @@ const SummaryPage = () => {
                 console.log(data,"imp!!!!");
                 
                     
-                    products = data.products.map((item: CartItem) => ({
+                products = data.products.map((item: any) => ({
                         name: item.domainName,
                         link: item?.link,
                         img: CART?.google,
@@ -59,7 +60,7 @@ const SummaryPage = () => {
                 }
                 setIsLoading(false);
             } else {
-                const cartItem = window.localStorage.getItem('cart');
+                const cartItem:any = getLocalStorage('cart');
                 if (cartItem) {
                     setIsLoading(true);
                     try {
@@ -72,7 +73,7 @@ const SummaryPage = () => {
                         }));
                     } catch (error) {
                         console.error("Error parsing cart data:", error);
-                        window.localStorage.removeItem('cart');
+                        removeLocalStorage('cart');
                     }
                     setIsLoading(false);
                 }

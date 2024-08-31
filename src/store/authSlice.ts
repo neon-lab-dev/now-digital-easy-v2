@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { getLocalStorage, removeLocalStorage, setLocalStorage } from '@/helper/localStorage';
 
 interface AuthState {
     isAuthenticated: boolean;
@@ -16,7 +17,8 @@ const initialState: AuthState = {
 };
 
 // Check localStorage for authentication data
-const storedData = window.localStorage.getItem('data');
+if (typeof window !== 'undefined'){
+    const storedData:any = getLocalStorage<{ token: string; data: any }>("data");
 if (storedData) {
     try {
         const parsedData = JSON.parse(storedData);
@@ -27,7 +29,7 @@ if (storedData) {
         console.error("Failed to parse stored authentication data:", error);
     }
 }
-
+}
 const authSlice = createSlice({
     name: 'auth',
     initialState,
@@ -38,7 +40,7 @@ const authSlice = createSlice({
             state.user = action.payload.user;
             state.error = null;
             // Save user data to localStorage
-            window.localStorage.setItem('data', JSON.stringify(action.payload));
+            setLocalStorage('data', JSON.stringify(action.payload));
         },
         loginFailure: (state, action: PayloadAction<string>) => {
             state.isAuthenticated = false;
@@ -46,7 +48,7 @@ const authSlice = createSlice({
             state.user = null;
             state.error = action.payload;
             // Optionally clear user data from localStorage
-            window.localStorage.removeItem('data');
+            removeLocalStorage('data');
         },
         logout: (state) => {
             state.isAuthenticated = false;
@@ -54,7 +56,7 @@ const authSlice = createSlice({
             state.user = null;
             state.error = null;
             // Remove user data from localStorage
-            window.localStorage.removeItem('data');
+            removeLocalStorage('data');
         },
     },
 });

@@ -3,6 +3,7 @@ import { CART } from '@/assets';
 import { Accordion, AccordionItem } from "@nextui-org/accordion";
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { getLocalStorage } from '@/helper/localStorage';
 
 
 interface CartItem {
@@ -21,11 +22,11 @@ interface Product {
 const PaymentPage = () => {
 const [isLoading,setIsLoading]=useState(false);
 const [products, setProducts] = useState<Product[]>([]);
-const [cartItems, setCartItems] = useState({});
+const [cartItems, setCartItems]:any = useState({});
 useEffect(()=>{
     if (typeof window === 'undefined') return;
     
-    const token = window.localStorage.getItem('token');
+    const token = getLocalStorage('token');
     const fetchCartItems = async () => {
         let products: Product[] = [];
 
