@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TextTransition, { presets } from "react-text-transition";
 import axios from "axios";
 import Cart from "@/components/Cart";
+import { getLocalStorage, setLocalStorage } from "@/helper/localStorage";
 
 interface Domain {
   name: string;
@@ -41,8 +42,10 @@ const Hero = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [cart, setCart] = useState< Domain[] >(() => {
-    const savedCart = localStorage.getItem("cart");
-    return savedCart ? JSON.parse(savedCart) : [];
+    if (typeof window !=='undefined') {
+      const savedCart:any = getLocalStorage("cart");
+      return savedCart ? JSON.parse(savedCart) : [];
+    }
   });
 
   const queryClient = useQueryClient();
@@ -64,7 +67,7 @@ const Hero = () => {
 
   useEffect(() => {
     // Save the cart to local storage whenever it changes
-    localStorage.setItem("cart", JSON.stringify(cart));
+    setLocalStorage("cart",JSON.stringify(cart))
     console.log("Cart updated and saved to localStorage:", cart);
   }, [cart]);
 
@@ -80,7 +83,7 @@ const Hero = () => {
     if (typeof window === 'undefined') return; 
 console.log(domain,"domaiiiiin");
 
-    const token = window.localStorage.getItem('token');
+const token = getLocalStorage('token');
     const newCartItem = {
       product: "domain",
       productId: "65703f67747116cd40fdea3a",
@@ -115,9 +118,11 @@ console.log(domain,"domaiiiiin");
         return;
       }
     } else {
-      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+      const cart = JSON.parse(getLocalStorage("cart") || "[]");
       cart.push(newCartItem);
       localStorage.setItem("cart", JSON.stringify(cart));
+      // localStorage.setItem("cart", JSON.stringify(cart));
+      setLocalStorage("cart", JSON.stringify(cart));
       console.log("Cart updated and saved to localStorage:", cart);
     }
   

@@ -10,7 +10,7 @@ interface CartItem {
     link: string;
     price?: { registerPrice: string }[]; 
     // Adjust this based on your actual data structure
-    domainName:string
+    domainName:string;
 }
 
 interface Product {
